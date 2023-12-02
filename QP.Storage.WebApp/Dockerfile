@@ -1,20 +1,13 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/nightly/sdk:8.0-alpine-aot AS build
 WORKDIR /src
 COPY ["QP.Storage.WebApp.csproj", ""]
-RUN dotnet restore "./QP.Storage.WebApp.csproj"
+RUN dotnet restore -r linux-musl-x64
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "QP.Storage.WebApp.csproj" -c Release -o /app/build
+RUN dotnet publish -c Release -r linux-musl-x64 -o /app/publish --self-contained=true --no-restore
 
-FROM build AS publish
-RUN dotnet publish "QP.Storage.WebApp.csproj" -c Release -o /app/publish
-
-FROM base AS final
+FROM alpine:3.18 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "QP.Storage.WebApp.dll"]
+COPY --from=build /app/publish .
+EXPOSE 80
+EXPOSE 443
+ENTRYPOINT ["./QP.Storage.WebApp", "--urls", "http://*:80"]

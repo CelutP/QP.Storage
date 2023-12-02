@@ -21,5 +21,9 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/*.sln
+**/bin
+**/obj
+**/.idea
 LICENSE
 README.md
