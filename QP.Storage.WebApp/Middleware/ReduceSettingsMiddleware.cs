@@ -27,13 +27,8 @@ public class ReduceSettingsMiddleware
 
         if (context.Request.Path.StartsWithSegments(basePath))
         {
-            var serializeOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
             _logger.Log(LogLevel.Debug, $"Call to {_settings.BasePath}");
-            await context.Response.WriteAsync(JsonSerializer.Serialize(_settings, serializeOptions));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(_settings, ImageResizeSerializerContext.Default.ImageResizeSettings));
             
             return;
         }
