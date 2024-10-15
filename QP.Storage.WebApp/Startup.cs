@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,12 +36,26 @@ namespace QP.Storage.WebApp
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
             app.UseMiddleware<FileSizeMiddleware>();
             app.UseMiddleware<ReduceSettingsMiddleware>();
             app.UseMiddleware<ImageResizeMiddleware>();
 
-            app.UseStaticFiles();
+            // Remove all code after this line and return default app.UseStaticFiles() call
+            // after MS closes this issue https://github.com/dotnet/aspnetcore/issues/39984
+            Dictionary<string, string> customExtensions = Configuration.GetSection("CustomExtensions")
+                .Get<Dictionary<string, string>>();
+
+            FileExtensionContentTypeProvider extensionProvider = new();
+
+            foreach (KeyValuePair<string,string> customExtension in customExtensions)
+            {
+                extensionProvider.Mappings.Add(customExtension.Key, customExtension.Value);
+            }
+
+            app.UseStaticFiles(new StaticFileOptions {
+                ContentTypeProvider = extensionProvider,
+            });
         }
     }
 }
