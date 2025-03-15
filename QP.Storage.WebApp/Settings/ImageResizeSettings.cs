@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace QP.Storage.WebApp.Settings;
+﻿namespace QP.Storage.WebApp.Settings;
 
 public class ImageResizeSettings
 {
@@ -12,7 +10,3 @@ public class ImageResizeSettings
     public string[] ExtensionsAllowedToResize { get; set; }
     public string ResizedImageTemplate { get; set; }
 }
-
-[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(ImageResizeSettings), GenerationMode = JsonSourceGenerationMode.Serialization)]
-internal partial class ImageResizeSerializerContext : JsonSerializerContext;

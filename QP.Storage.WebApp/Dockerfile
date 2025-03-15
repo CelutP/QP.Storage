@@ -1,13 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
-RUN apk update && apk upgrade
-RUN apk add --no-cache clang build-base zlib-dev
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["QP.Storage.WebApp.csproj", ""]
-RUN dotnet restore -r linux-musl-x64
+RUN dotnet restore
 COPY . .
-RUN dotnet publish -c Release -r linux-musl-x64 -o /app/publish --self-contained=true --no-restore
+RUN dotnet publish "QP.Storage.WebApp.csproj" -c Release -o /app/publish --no-restore
 
-FROM alpine:3 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
