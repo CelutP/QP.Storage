@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace QP.Storage.WebApp.Settings;
+﻿namespace QP.Storage.WebApp.Settings;
 
 public class ImageResizeSettings
 {

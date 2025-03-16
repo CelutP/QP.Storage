@@ -12,29 +12,31 @@ public class ReduceSettingsMiddleware
     private readonly RequestDelegate _next;
     private readonly ImageResizeSettings _settings;
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+    private readonly JsonSerializerOptions _serializerOptions;
 
     public ReduceSettingsMiddleware(RequestDelegate next, IOptions<ImageResizeSettings> settings)
     {
         _next = next;
         _settings = settings.Value;
+
+        _serializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
     }
 
     public async Task Invoke(HttpContext context)
     {
-        var basePath = _settings.BasePath.StartsWith("/") ?
+        string basePath = _settings.BasePath.StartsWith("/") ?
             _settings.BasePath :
             $"/{_settings.BasePath}";
 
         if (context.Request.Path.StartsWithSegments(basePath))
         {
-            var serializeOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
             _logger.Log(LogLevel.Debug, $"Call to {_settings.BasePath}");
-            await context.Response.WriteAsync(JsonSerializer.Serialize(_settings, serializeOptions));
-            
+            await context.Response.WriteAsync(JsonSerializer.Serialize(_settings, _serializerOptions));
+
             return;
         }
 
