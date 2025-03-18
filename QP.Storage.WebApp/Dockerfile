@@ -9,4 +9,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
-ENTRYPOINT ["dotnet", "./QP.Storage.WebApp", "--urls", "http://*:80"]
+ENTRYPOINT ["dotnet", "./QP.Storage.WebApp.dll", "--urls", "http://*:80"]
