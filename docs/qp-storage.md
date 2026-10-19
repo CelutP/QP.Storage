@@ -9,7 +9,24 @@
 * [DockerHub](https://hub.docker.com/r/qpcms/qp-storage/tags): `qpcms/qp-storage`
 * QA Harbor: `registry.quantumart.ru/qp8-cms/storage`
 
+## Настройка CORS
+
+По умолчанию CORS выключен: приложение не добавляет заголовки `Access-Control-*`. Чтобы разрешить кросс-доменные запросы только с определённых сайтов, задайте переменные окружения:
+
+| Переменная | Описание |
+|---|---|
+| `Cors__Enabled` | `true` — включить CORS |
+| `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, ... | белый список origin'ов, например `https://example.com` (обязателен при `Cors__Enabled=true`) |
+| `Cors__AllowCredentials` | `true` — разрешить запросы с cookies/Authorization (по умолчанию `false`) |
+| `Cors__PreflightMaxAgeSeconds` | время кэширования preflight-ответа, сек. (по умолчанию `3600`) |
+
+Разрешены методы `GET`, `HEAD`, `OPTIONS`. Запросы с origin не из списка не получают `Access-Control-Allow-Origin`.
+
 ## История тегов (версий)
+
+### 1.3.2.0
+
+* Добавлена настройка CORS с белым списком доменов (по умолчанию выключена)
 
 ### 1.3.1.0
 
