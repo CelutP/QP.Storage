@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
@@ -14,11 +13,14 @@ namespace QP.Storage.WebApp
 {
     public class Startup
     {
+        private readonly CorsSettings _corsSettings;
+
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            _corsSettings = CorsSettings.Load(configuration.GetSection("Cors"));
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -30,38 +32,21 @@ namespace QP.Storage.WebApp
             services.Configure<ImageResizeSettings>(Configuration.GetSection("ImageResizeSettings"));
             services.AddTransient<ImageProcessor>();
 
-            CorsSettings corsSettings = GetCorsSettings();
-            if (corsSettings.Enabled)
+            if (_corsSettings.Enabled)
             {
                 services.AddCors(options => options.AddDefaultPolicy(policy =>
                 {
-                    policy.WithOrigins(corsSettings.AllowedOrigins)
+                    policy.WithOrigins(_corsSettings.AllowedOrigins)
                         .WithMethods("GET", "HEAD", "OPTIONS")
                         .AllowAnyHeader()
-                        .SetPreflightMaxAge(TimeSpan.FromSeconds(corsSettings.PreflightMaxAgeSeconds));
+                        .SetPreflightMaxAge(TimeSpan.FromSeconds(_corsSettings.PreflightMaxAgeSeconds));
 
-                    if (corsSettings.AllowCredentials)
+                    if (_corsSettings.AllowCredentials)
                     {
                         policy.AllowCredentials();
                     }
                 }));
             }
-        }
-
-        private CorsSettings GetCorsSettings()
-        {
-            CorsSettings settings = Configuration.GetSection("Cors").Get<CorsSettings>() ?? new CorsSettings();
-            settings.AllowedOrigins = (settings.AllowedOrigins ?? [])
-                .Select(origin => origin?.Trim().TrimEnd('/'))
-                .Where(origin => !string.IsNullOrEmpty(origin))
-                .ToArray();
-
-            if (settings.Enabled && settings.AllowedOrigins.Length == 0)
-            {
-                throw new InvalidOperationException("Cors:Enabled is true, but Cors:AllowedOrigins is empty");
-            }
-
-            return settings;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -73,7 +58,7 @@ namespace QP.Storage.WebApp
             }
 
             // CORS должен стоять первым, чтобы заголовки попадали и в ответы middleware (размер файла, resize)
-            if (GetCorsSettings().Enabled)
+            if (_corsSettings.Enabled)
             {
                 app.UseCors();
             }
