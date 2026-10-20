@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,11 +13,14 @@ namespace QP.Storage.WebApp
 {
     public class Startup
     {
+        private readonly CorsSettings _corsSettings;
+
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            _corsSettings = CorsSettings.Load(configuration.GetSection("Cors"));
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -27,6 +31,22 @@ namespace QP.Storage.WebApp
             services.Configure<FileSizeEndpointSettings>(Configuration.GetSection("FileSizeEndpointSettings"));
             services.Configure<ImageResizeSettings>(Configuration.GetSection("ImageResizeSettings"));
             services.AddTransient<ImageProcessor>();
+
+            if (_corsSettings.Enabled)
+            {
+                services.AddCors(options => options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins(_corsSettings.AllowedOrigins)
+                        .WithMethods("GET", "HEAD", "OPTIONS")
+                        .AllowAnyHeader()
+                        .SetPreflightMaxAge(TimeSpan.FromSeconds(_corsSettings.PreflightMaxAgeSeconds));
+
+                    if (_corsSettings.AllowCredentials)
+                    {
+                        policy.AllowCredentials();
+                    }
+                }));
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,6 +55,12 @@ namespace QP.Storage.WebApp
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+            }
+
+            // CORS должен стоять первым, чтобы заголовки попадали и в ответы middleware (размер файла, resize)
+            if (_corsSettings.Enabled)
+            {
+                app.UseCors();
             }
 
             app.UseMiddleware<FileSizeMiddleware>();
